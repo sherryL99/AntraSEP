@@ -1,0 +1,12 @@
+--1.LIST OF PEOPLE'S FULL NAME
+
+select FullName,PhoneNumber,FaxNumber
+from Application.People
+
+--2. LIST THE CUSTOMER COMPANIES
+
+select SC.CustomerName
+from Sales.Customers AS SC
+join Application.People AS AP ON SC.PrimaryContactPersonID= AP.PersonID
+where SC.PhoneNumber = AP.PhoneNumber
+
