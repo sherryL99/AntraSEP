@@ -1,0 +1,13 @@
+--3.try to use window function (aggregation) SOME issues HAPPENED at datepart
+--- LATEST_PUR invalid
+
+USE WideWorldImporters
+go
+
+select distinct sc.CustomerName, sc.CustomerID,
+(Max(so.OrderDate) over(Partition by so.CustomerID Order by so.OrderDate, sc.CustomerID DESC)) AS LATEST_PUR 
+
+ from Sales.Customers sc
+ join Sales.Orders so
+ on sc.CustomerID=so.CustomerID
+ having DATEPART(year, LATEST_PUR) < 2016
