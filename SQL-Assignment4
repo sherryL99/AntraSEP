@@ -1,1 +1,9 @@
 
+--4. LIST OF STOCK ITEMS  AND TOTAL QUANTITY OF EACH ITEM IN 2013
+
+select si.StockItemName, count(po.LastReceiptDate) AS TOTAL_COUNT
+ from Purchasing.PurchaseOrderLines po
+ join Warehouse.StockItems si
+ on po.StockItemID = si.StockItemID
+ group by  si.StockItemName, po.LastReceiptDate
+having year(po.LastReceiptDate) =2013
