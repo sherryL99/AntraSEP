@@ -1,0 +1,22 @@
+--1.LIST OF PEOPLE'S FULL NAME
+
+select FullName,PhoneNumber,FaxNumber
+from Application.People
+
+--2. LIST THE CUSTOMER COMPANIES
+
+select SC.CustomerName
+from Sales.Customers AS SC
+join Application.People AS AP ON SC.PrimaryContactPersonID= AP.PersonID
+where SC.PhoneNumber = AP.PhoneNumber
+
+--3.trying to USE window function???
+SELECT t.CustomerName,t.LATEST_PUR
+FROM(
+select  sc.CustomerName,
+ MAX(sct.TransactionDate) over(Partition by sc.CustomerName Order by sct.TransactionDate DESC) AS LATEST_PUR
+ from Sales.Customers sc
+ join Sales.CustomerTransactions sct
+ on sc.CustomerID=sct.CustomerID
+) t
+where DATEPART(YEAR,t.LATEST_PUR) < 2016
