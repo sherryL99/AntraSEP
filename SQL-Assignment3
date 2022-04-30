@@ -11,3 +11,17 @@ select distinct sc.CustomerName, sc.CustomerID,
  join Sales.Orders so
  on sc.CustomerID=so.CustomerID
  having DATEPART(year, LATEST_PUR) < 2016
+
+
+--3.NO RESULT PRINT IT OUT
+USE WideWorldImporters
+go
+
+select distinct sc.CustomerName,  Max(so.OrderDate) AS LATE\
+ from Sales.Customers sc
+ join Sales.Orders so
+ on sc.CustomerID=so.CustomerID
+group by sc.CustomerName
+having datepart(year,convert(datetime,(MAX(so.OrderDate))))< 2016
+
+
