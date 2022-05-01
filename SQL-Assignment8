@@ -1,0 +1,23 @@
+USE WideWorldImporters
+GO
+
+SELECT 
+AST.StateProvinceName,
+AVG(
+datediff(
+day,convert(VARCHAR(100),SO.OrderDate,23),convert(VARCHAR(100),SI.ConfirmedDeliveryTime,23)
+)
+) AS Avg_processing_day, 
+MONTH(SO.OrderDate) AS MONTH_ORDER
+
+FROM Application.StateProvinces AST
+JOIN Application.Cities AC
+ON AST.StateProvinceID = AC.StateProvinceID
+JOIN Sales.Customers SC
+ON SC.DeliveryCityID =AC.CityID
+JOIN Sales.Orders SO
+ON SO.CustomerID = SC.CustomerID 
+JOIN Sales.Invoices SI
+ON  SI.OrderID = SO.OrderID
+group by MONTH(SO.OrderDate), AST.StateProvinceName
+ORDER BY MONTH(SO.OrderDate)
