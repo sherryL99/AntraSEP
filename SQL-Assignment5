@@ -1,1 +1,10 @@
 
+use WideWorldImporters
+go
+
+select si.StockItemName,pol.Description
+from Purchasing.PurchaseOrderLines pol
+join Warehouse.StockItems si
+on pol.[StockItem ID]= si.StockItemID
+GROUP BY si.StockItemName,pol.Description
+having LEN(pol.Description)>=10
