@@ -1,1 +1,21 @@
 
+USE WideWorldImporters
+GO
+--- TOO MANY TABLES JOINED.....
+--- NEED TO BE OPTIMIZED
+
+select  distinct WS.StockItemName
+--, ast.StateProvinceName
+FROM Warehouse.StockItems WS
+join Sales.InvoiceLines sil
+on ws.StockItemID = sil.StockItemID
+join Sales.Invoices si
+on si.InvoiceID = sil.InvoiceID
+join Sales.Customers sc
+on si.CustomerID= sc.CustomerID
+join Application.Cities ac
+on sc.DeliveryCityID = ac.CityID
+join Application.StateProvinces  ast
+on ast.StateProvinceID = ac.StateProvinceID
+
+WHERE ast.StateProvinceName Not in('Alabama' , 'Georgia') and DATEPART(year,si.InvoiceDate) = 2015
