@@ -1,0 +1,19 @@
+  USE WideWorldImporters
+  GO
+  WITH 
+ CTE AS (SELECT SG.StockGroupID,SG.StockGroupName FROM Warehouse.StockGroups SG),
+ CTE2 AS (SELECT SI.StockItemID AS ID,SUM(SI.Quantity) AS TOTAL_SALES FROM Sales.InvoiceLines SI GROUP BY SI.StockItemID),
+ CTE3 AS (SELECT SO.StockItemID AS ID,SUM(SO.Quantity) AS TOTAL_PURCHASE FROM Sales.OrderLines SO GROUP BY SO.StockItemID)
+
+ SELECT WSG.StockGroupName,(SUM(CTE3.TOTAL_PURCHASE)-SUM(CTE2.TOTAL_SALES))AS RemainingStock
+ FROM CTE2
+ JOIN CTE3
+ ON CTE2.ID=CTE3.ID
+ JOIN Warehouse.StockItems WS
+ ON WS.StockItemID =CTE3.ID
+ JOIN Warehouse.StockItemStockGroups WSISG
+ ON WSISG.StockItemID = WS.StockItemID
+ JOIN Warehouse.StockGroups WSG
+ ON WSG.StockGroupID = WSISG.StockGroupID
+ GROUP BY WSG.StockGroupName
+ 
