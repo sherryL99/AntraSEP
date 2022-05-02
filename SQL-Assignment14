@@ -1,0 +1,35 @@
+/*IF CONDTITION NOT COMPLETE AND GOT THE MOST DELIVERIES NOT COMPLETE*/
+
+WITH 
+CTE AS (SELECT WS.StockItemID AS StockItemID,WS.StockItemName as StockItemName FROM Warehouse.StockItems WS),
+CTE2 AS (SELECT SO.StockItemID as StockItemID,SO.Quantity as Quantity, SO.OrderID AS OrderID  FROM Sales.OrderLines SO),
+CTE3 AS (SELECT SC.CustomerID as CustomerID,SC.DeliveryCityID AS DeliveryCityID FROM Sales.Customers SC )
+--,
+
+
+--CTE4 AS(
+SELECT  CTE.StockItemName, AC.CityName,YEAR(SO.OrderDate) as YearOfDelivery, 
+--DENSE_RANK()OVER(ORDER BY COUNT(CTE3.DeliveryCityID )DESC, AC.CityName ASC ) as DENSERANK,
+COUNT(CTE3.DeliveryCityID) AS DeliveryCount
+FROM CTE
+JOIN CTE2
+ON CTE.StockItemID = CTE2.StockItemID
+JOIN Sales.Orders SO
+ON SO.OrderID = CTE2.OrderID
+JOIN CTE3
+ON CTE3.CustomerID = SO.CustomerID
+JOIN Application.Cities AC
+ON CTE3.DeliveryCityID = AC.CityID
+WHERE YEAR(SO.OrderDate)=2016 
+GROUP BY AC.CityName,CTE.StockItemName,YEAR(SO.OrderDate)
+
+ORDER BY AC.CityName, DeliveryCount DESC
+--)
+
+--SELECT CTE4.CityName,CTE4.StockItemName,CTE4.DeliveryCount
+--FROM CTE4
+--WHERE CTE4.DENSERANK=1
+
+
+/*OFFSET 0 ROWS
+FETCH FIRST 1 ROWS ONLY*/
