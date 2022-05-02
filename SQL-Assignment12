@@ -1,0 +1,27 @@
+-- HAVE CHANGED = INTO IN OPERATOR, BUT STIIL GOT AN ERROR FOR SUBQUERY
+
+SELECT  WS.StockItemName,concat(SC.DeliveryAddressLine2,'， ',SC.DeliveryAddressLine1) AS DeliveryAddress,
+  AC.CityName,
+  ACO.CountryName,
+  SC.CustomerName,
+ (select TEMP.FullName from Application.People AS TEMP  join Sales.Customers T2 ON TEMP.PersonID=T2.CustomerID
+  where TEMP.PersonID IN(SELECT  T1.PrimaryContactPersonID FROM Sales.Customers T1)
+  )AS CustomerContactPersonName,
+  SC.PhoneNumber,
+  SOL.Quantity
+	FROM Warehouse.StockItems WS
+	JOIN SALES.OrderLines SOL
+	ON WS.StockItemID = SOL.StockItemID
+	JOIN Sales.Orders SO
+	ON SO.OrderID = SOL.OrderID
+	JOIN Sales.Customers SC
+	ON SO.CustomerID = SC.CustomerID
+	JOIN Application.People AP 
+	ON AP.PersonID = SC.CustomerID
+	JOIN Application.Cities AC
+	ON AC.CityID = SC.DeliveryCityID
+	JOIN Application.StateProvinces AST
+	ON AST.StateProvinceID = AC.StateProvinceID
+	JOIN Application.Countries ACO
+	ON ACO.CountryID =AST.CountryID
+ 
