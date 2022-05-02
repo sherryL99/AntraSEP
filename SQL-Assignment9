@@ -1,0 +1,74 @@
+/****** Script for SelectTopNRows command from SSMS  ******/
+
+---SHOW THE DATA LOOKS LIKE
+/*
+SELECT TOP (1000) [PurchaseOrderLineID]
+      ,[PurchaseOrderID]
+      ,[StockItem ID]
+      ,[OrderedOuters]
+      ,[Description]
+      ,[ReceivedOuters]
+      ,[PackageTypeID]
+      ,[ExpectedUnitPricePerOuter]
+      ,[LastReceiptDate]
+      ,[IsOrderLineFinalized]
+      ,[LastEditedBy]
+      ,[LastEditedWhen]
+  FROM [WideWorldImporters].[Purchasing].[PurchaseOrderLines]
+  GO
+  /****** Script for SelectTopNRows command from SSMS  ******/
+SELECT TOP (1000) [OrderLineID]
+      ,[OrderID]
+      ,[StockItemID]
+      ,[Description]
+      ,[PackageTypeID]
+      ,[Quantity]
+      ,[UnitPrice]
+      ,[TaxRate]
+      ,[PickedQuantity]
+      ,[PickingCompletedWhen]
+      ,[LastEditedBy]
+      ,[LastEditedWhen]
+  FROM [WideWorldImporters].[Sales].[OrderLines]
+
+  USE WideWorldImporters
+  GO
+  SELECT OL.StockItemID, SALES_AMOUNT= SUM(OL.Quantity),OL.PickingCompletedWhen
+	  FROM Sales.OrderLines OL
+	  GROUP BY OL.StockItemID,OL.PickingCompletedWhen
+ GO
+  SELECT POL.[StockItem ID],PURCHASE_AMOUNT= SUM(POL.ReceivedOuters),POL.LastReceiptDate
+  FROM Purchasing.PurchaseOrderLines POL
+  WHERE YEAR(POL.LastReceiptDate) = 2015
+  GROUP BY POL.[StockItem ID],POL.LastReceiptDate
+  order BY POL.[StockItem ID] 
+  GO
+  */
+  
+  
+  
+  ---WHERE THE ANSWER IS
+  WITH CTE
+  AS
+	  (SELECT OL.StockItemID, SALES_AMOUNT= SUM(OL.Quantity),OL.PickingCompletedWhen
+	  FROM Sales.OrderLines OL
+	  WHERE YEAR(OL.PickingCompletedWhen) = 2015
+	  GROUP BY OL.StockItemID,OL.PickingCompletedWhen
+	   ),
+	CTE2  AS (SELECT POL.[StockItem ID],PURCHASE_AMOUNT= SUM(POL.ReceivedOuters),POL.LastReceiptDate
+  FROM Purchasing.PurchaseOrderLines POL
+  WHERE YEAR(POL.LastReceiptDate) = 2015
+  GROUP BY POL.[StockItem ID],POL.LastReceiptDate
+  )
+  
+  SELECT WS.StockItemName,CTE.StockItemID, SUM(SALES_AMOUNT) AS SALE_AMOUNT,SUM(CTE2.PURCHASE_AMOUNT) AS PUR_AMOUNT,PickingCompletedWhen,CTE2.LastReceiptDate
+  FROM CTE
+  JOIN CTE2
+  ON CTE.StockItemID = CTE2.[StockItem ID]
+  JOIN Warehouse.StockItems WS
+  ON CTE2.[StockItem ID] = WS.StockItemID
+  --WHERE YEAR(CTE.PickingCompletedWhen)=2015 AND YEAR(CTE2.LastReceiptDate)=2015 
+  GROUP BY WS.StockItemName,CTE.StockItemID,PickingCompletedWhen,LastReceiptDate
+  HAVING SUM(SALES_AMOUNT) < SUM(CTE2.PURCHASE_AMOUNT)
+ 
+  
