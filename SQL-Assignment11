@@ -1,0 +1,14 @@
+/****** Script for SelectTopNRows command from SSMS  ******/
+SELECT TOP (1000) [CityID]
+      ,[CityName]
+      ,[StateProvinceID]
+      ,[Location]
+      ,[LatestRecordedPopulation]
+      ,[LastEditedBy]
+      ,[ValidFrom]
+      ,[ValidTo]
+  FROM [WideWorldImporters].[Application].[Cities]
+  GO
+  SELECT CityName,ValidFrom
+  FROM Application.Cities
+  WHERE CONVERT(varchar,ValidFrom,23)>'2015-01-01'
