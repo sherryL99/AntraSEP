@@ -34,6 +34,17 @@ def readFile(container,filename:str) -> DataFrame:
 
 # COMMAND ----------
 
+def raw_to_bronze(df:DataFrame):
+    dataframe =  df.select(
+  "movie",
+  current_timestamp().cast("date").alias("CreatedDate"),
+  lit("new").alias("status"),
+  current_timestamp().cast("date").alias("p_UpdatedDate"))
+    return dataframe
+
+
+# COMMAND ----------
+
 def flattenDataFrame(dataframe: DataFrame) -> DataFrame:
     df_raw_exploded = dataframe.select(explode(dataframe["movie"]).alias("movies"))
     return df_raw_exploded 
@@ -52,7 +63,7 @@ def compute_uuid(name: str) -> uuid.UUID:
 
 # COMMAND ----------
 
-def transform_raw_movie(raw: DataFrame) -> DataFrame:
+def transform_bronze_movie(raw: DataFrame) -> DataFrame:
     return raw.select(
         "movies",
   col("movies.CreatedDate").cast("date").alias("CreatedDate"),
@@ -63,7 +74,7 @@ def transform_raw_movie(raw: DataFrame) -> DataFrame:
 
 # COMMAND ----------
 
-def transform_raw_genres(raw: DataFrame) -> DataFrame:
+def transform_bronze_genres(raw: DataFrame) -> DataFrame:
     return raw.select(
         explode("movies.genres").alias("genres"),
   col("movies.CreatedDate").cast("date").alias("CreatedDate"),
@@ -75,7 +86,7 @@ def transform_raw_genres(raw: DataFrame) -> DataFrame:
 
 # COMMAND ----------
 
-def transform_raw_languages(raw: DataFrame) -> DataFrame:
+def transform_bronze_languages(raw: DataFrame) -> DataFrame:
     return raw.select(
    "movies.OriginalLanguage",
   col("movies.CreatedDate").cast("date").alias("CreatedDate"),
@@ -87,56 +98,20 @@ def transform_raw_languages(raw: DataFrame) -> DataFrame:
 
 # COMMAND ----------
 
-def transform_movie_bronze(tablename: str, quarantine: bool = False) -> DataFrame:
+def bronze_to_silver(tablename: str) -> DataFrame:
     bronze = spark.read.table(tablename).filter("status='new'")
-    bronzeAugmentedDF = bronze.select("movies","uuid","movies.*")
-    movie_silver = bronzeAugmentedDF.select(
-    "movies",\
-    "uuid",\
-    "BackdropUrl",\
-    "Budget",\
-    "CreatedBy",\
-    col("CreatedDate").cast("date").alias("CreatedDate"),\
-    col("Id").cast("string").alias("Id"),\
-    "ImdbUrl",\
-    "OriginalLanguage",\
-    "PosterUrl",\
-    "Price",\
-    col("ReleaseDate").cast("date").alias("ReleaseDate"),\
-    "Revenue",\
-    "RunTime",\
-    "Tagline",\
-    "Title",\
-    "TmdbUrl",\
-    "UpdatedBy",\
-    current_timestamp().cast("date").alias("p_UpdatedDate"),\
-    "genres"
-)
-
-    return movie_silver
-
-
-# COMMAND ----------
-
-def transform_genres_bronze(tablename: str, quarantine: bool = False) -> DataFrame:
-    genres_bronze_new = spark.read.table(tablename).filter("status='new'")
-    genres_silver = genres_bronze_new.select("genres","uuid",                             col("genres.id").alias("genres_id"),col("genres.name").alias("genres_name"))
-    genres_silver = genres_silver.select(
-        "uuid",
-        "genres_id",
-        "genres_name",
-        current_timestamp().cast("date").alias("p_UpdatedDate")
-    )
-    return genres_silver
-
-# COMMAND ----------
-
-def transform_languages_bronze(tablename: str, quarantine: bool = False) -> DataFrame:
-    languages_bronze_new = spark.read.table("languages_classic_bronze").filter("status='new'")
-    languages_silver = languages_bronze_new.select("uuid","OriginalLanguage")
-    languages_silver = languages_silver.select("*",current_timestamp().cast("date").alias("p_UpdatedDate"))
     
-    return  languages_silver
+    movie_silver= bronze.select("movies","uuid","movies.*",current_timestamp().cast("date").alias("p_UpdatedDate")).withColumn("CreatedDate",col("CreatedDate").cast("date"))\
+.withColumn("Id",col("Id").cast("string"))\
+.withColumn("ReleaseDate",col("ReleaseDate").cast("date"))\
+.withColumn("UpdatedDate",col("UpdatedDate").cast("date")).drop("movies")
+
+    genres_silver = bronze.select(col("movies.genres").cast("string").alias("genres"),\
+                                         "uuid",           explode("movies.genres").alias("nest_json_genres")).select("genres","uuid",col("nest_json_genres.id").alias("genres_id"),col("nest_json_genres.name").alias("genres_name"),current_timestamp().cast("date").alias("p_UpdatedDate"))
+    languages_silver = bronze.select("uuid","movies.OriginalLanguage",current_timestamp().cast("date").alias("p_UpdatedDate"))
+    
+    return movie_silver, genres_silver, languages_silver
+
 
 # COMMAND ----------
 
@@ -144,17 +119,17 @@ def generate_genres_clean_and_quarantine_dataframes(
     dataframe: DataFrame,
 ) -> (DataFrame, DataFrame):
     return (
-        dataframe.filter("genres.name IS NOT NULL"),
-        dataframe.filter("genres.name IS NULL"),
+        dataframe.filter("genres_name IS NOT NULL"),
+        dataframe.filter("genres_name IS NULL"),
     )
 
 def generate_movie_clean_and_quarantine_dataframes(
     dataframe: DataFrame,
 ) -> (DataFrame, DataFrame):
     return (
-        dataframe.filter("movies.RunTime > 0").filter("movies.Budget >= 1000000"),
-        dataframe.filter("movies.RunTime < 0"),
-        dataframe.filter("movies.Budget < 1000000")
+        dataframe.filter("RunTime > 0").filter("Budget >= 1000000"),
+        dataframe.filter("RunTime < 0"),
+        dataframe.filter("Budget < 1000000")
     )
 def generate_languages_clean_and_quarantine_dataframes(
     dataframe: DataFrame,
@@ -186,8 +161,7 @@ def batch_writer(
 ) -> DataFrame:
     return (
         dataframe.drop(
-            *exclude_columns
-        )  # This uses Python argument unpacking (https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists)
+            *exclude_columns)
         .write.format("delta")
         .mode(mode)
         .partitionBy(partition_column)
@@ -217,57 +191,41 @@ def update_bronze_table_status(
 
 # COMMAND ----------
 
-def repair_quarantined_records(
-    spark: SparkSession, bronzeTable: str, userTable: str
-) -> DataFrame:
-    bronzeQuarantinedDF = spark.read.table(bronzeTable).filter("status = 'quarantined'")
-    bronzeQuarTransDF = transform_bronze(bronzeQuarantinedDF, quarantine=True).alias(
-        "quarantine"
-    )
-    health_tracker_user_df = spark.read.table(userTable).alias("user")
-    repairDF = bronzeQuarTransDF.join(
-        health_tracker_user_df,
-        bronzeQuarTransDF.device_id == health_tracker_user_df.user_id,
-    )
-    silverCleanedDF = repairDF.select(
-        col("quarantine.value").alias("value"),
-        col("user.device_id").cast("INTEGER").alias("device_id"),
-        col("quarantine.steps").alias("steps"),
-        col("quarantine.eventtime").alias("eventtime"),
-        col("quarantine.name").alias("name"),
-        col("quarantine.eventtime").cast("date").alias("p_eventdate"),
-    )
-    return silverCleanedDF
+def movie_quarantine_repaired(spark: SparkSession,bronzeTable:str) -> DataFrame:
+    movies_silver = bronze_to_silver(bronzeTable)[0]
+    _,movies_silver_quarantine1,movies_silver_quarantine2= generate_movie_clean_and_quarantine_dataframes(movies_silver) 
+    movies_silver_quarantine1=movies_silver_quarantine1.select("*").withColumn("RunTime",abs(movies_silver_quarantine1.RunTime))\
+    .withColumn("CreatedDate",col("CreatedDate").cast("date"))\
+    .withColumn("Id",col("Id").cast("string"))\
+    .withColumn("ReleaseDate",col("ReleaseDate").cast("date"))\
+    .withColumn("UpdatedDate",col("UpdatedDate").cast("date")).drop("movies")
 
-# COMMAND ----------
-
-def movie_quarantine_repaired(spark: SparkSession,bronzeTable: str) -> DataFrame:
-    movies_bronzeQ = transform_movie_bronze(bronzeTable).filter(col("status") == 'quarantined').drop("movies")
-    movies_bronzeQ = movies_bronzeQ\
-    .withColumn("RunTime",abs(movies_bronzeQ.RunTime))\
+    movies_silver_quarantine2=movies_silver_quarantine2\
     .withColumn("Budget",lit('1000000'))\
     .withColumn("Budget",col("Budget").cast("double"))\
     .withColumn("CreatedDate",col("CreatedDate").cast("date"))\
     .withColumn("Id",col("Id").cast("string"))\
     .withColumn("ReleaseDate",col("ReleaseDate").cast("date"))\
-    .drop("movies")
-    return movies_bronzeQ
+    .withColumn("UpdatedDate",col("UpdatedDate").cast("date")).drop("movies")
+    
+    movies_bronze_repaired = movies_silver_quarantine1.union(movies_silver_quarantine2)
+    return movies_bronze_repaired
 
 # COMMAND ----------
 
 def genres_quarantine_repaired(spark: SparkSession,bronzeTable: str) -> DataFrame:
-    df_genres_deduplicate=spark.read.table(bronzeTable)\
-    .dropDuplicates(['genres'])\
-    .select('genres')
-
-    genres_bronzeQuarantined = spark.read.table("genres_classic_bronze").filter(col("status") == 'quarantined')
-
-    genres_bronze_repaired =genres_bronzeQuarantined.join(df_genres_deduplicate, genres_bronzeQuarantined.genres.id == df_genres_deduplicate.genres.id)\
-    .drop(genres_bronzeQuarantined.genres)\
-                             .select("uuid",\
-                             col("genres.id").alias("genres_id"),\
-                             col("genres.name").alias("genres_name"),\
+    bronze = bronze_to_silver(bronzeTable)[1]
+    genres_silver_clean,genres_silver_quarantine = generate_genres_clean_and_quarantine_dataframes(bronze)
+    df_genres_deduplicate = spark.read.table(bronzeTable)\
+    .select(explode("movies.genres")).dropDuplicates(['col'])
+  
+    genres_bronze_repaired =genres_silver_quarantine.join(df_genres_deduplicate,genres_silver_quarantine.genres_id == df_genres_deduplicate.col.id)
+    
+    genres_bronze_repaired = genres_bronze_repaired.select("uuid",\
+                             col("col.id").alias("genres_id"),\
+                             col("col.name").alias("genres_name"),\
                              "p_UpdatedDate")
+
     return genres_bronze_repaired 
 
 # COMMAND ----------
@@ -289,44 +247,36 @@ def registerTable(spark: SparkSession, tableName:str, bronzePath:str):
 
 # COMMAND ----------
 
-
+dbutils.fs.rm(bronzePath_movies, recurse = True)
+dbutils.fs.rm(silverPath_movies, recurse=True)
+dbutils.fs.rm(silverPath_genres, recurse=True)
+dbutils.fs.rm(silverPath_languages, recurse=True)
 def raw_bronze_silver(num:str,  partition_column: "p_UpdatedDate", mode:"append"): 
-#raw to bronze
+    #raw to bronze
     df = readFile("newcontainer",f"movie_{num}.json".format(num))
+    df = raw_to_bronze(df)
+    #bronze to silver
     df_raw_exploded = flattenDataFrame(df)
-    movie_bronze_uuid = transform_raw_movie(df_raw_exploded)
-    genres_bronze = transform_raw_genres(movie_bronze_uuid)
-    language_bronze = transform_raw_languages(movie_bronze_uuid)
+    movie_bronze_uuid = transform_bronze_movie(df_raw_exploded)
+    genres_bronze = transform_bronze_genres(movie_bronze_uuid)
+    language_bronze = transform_bronze_languages(movie_bronze_uuid)
     #dbutils.fs.rm(bronzePath_movies, recurse = True)
     bronzeToSilverWrite=batch_writer(movie_bronze_uuid,partition_column,mode)
     bronzeToSilverWrite.save(bronzePath_movies)
-    #dbutils.fs.rm(bronzePath_genres, recurse = True)
-    bronzeToSilverWrite=batch_writer(genres_bronze,partition_column,mode)
-    bronzeToSilverWrite.save(bronzePath_genres)
-   # dbutils.fs.rm(bronzePath_languages, recurse = True)
-    bronzeToSilverWrite=batch_writer(language_bronze,partition_column,mode)
-    bronzeToSilverWrite.save(bronzePath_languages)
-    
     #Register Table
     registerTable(spark, 'movie_classic_bronze', bronzePath_movies)
-    registerTable(spark, 'genres_classic_bronze', bronzePath_genres)
-    registerTable(spark, 'languages_classic_bronze', bronzePath_languages)
-    
-#bronze to silver
-    movie_silver = transform_movie_bronze("movie_classic_bronze")
-    genres_silver = transform_genres_bronze("genres_classic_bronze")
-    languages_silver = transform_languages_bronze("languages_classic_bronze")
+
+    movie_silver, genres_silver, languages_silver = bronze_to_silver("movie_classic_bronze")
     #isolate clean and quarantine
     movies_silver_clean, movies_silver_quarantine1, movies_silver_quarantine2 = generate_movie_clean_and_quarantine_dataframes(movie_silver)
-    genres_silver_clean,genres_silver_quarantine= generate_genres_clean_and_quarantine_dataframes(genres_silver)
-    languages_silver_clean,languages_silver_quarantine= generate_languages_clean_and_quarantine_dataframes(languages_silver)
+    genres_silver_clean, genres_silver_quarantine= generate_genres_clean_and_quarantine_dataframes(genres_silver)
+    languages_silver_clean, languages_silver_quarantine= generate_languages_clean_and_quarantine_dataframes(languages_silver)
     #dbutils.fs.rm(silverPath_movies, recurse=True)
     #dbutils.fs.rm(silverPath_genres, recurse=True)
     #dbutils.fs.rm(silverPath_languages, recurse=True)
     batch_writer(movies_silver_clean,partition_column,mode).save(silverPath_movies)
     batch_writer(genres_silver_clean,partition_column,mode).save(silverPath_genres)
     batch_writer(languages_silver_clean,partition_column,mode).save(silverPath_languages)
-    
     #Register silver table
     registerTable(spark, 'movie_classic_silver', silverPath_movies)
     registerTable(spark, 'genres_classic_silver', silverPath_genres)
@@ -342,7 +292,7 @@ def raw_bronze_silver(num:str,  partition_column: "p_UpdatedDate", mode:"append"
     update_bronze_table_status(spark,bronzePath_languages,languages_silver_clean,"loaded")
     # quarantine repair
     movies_bronze_repaired = movie_quarantine_repaired(spark, "movie_classic_bronze")
-    genres_bronze_repaired = genres_quarantine_repaired(spark, "genres_classic_bronze")
+    genres_bronze_repaired = genres_quarantine_repaired(spark, "movie_classic_bronze")
     batch_writer(movies_bronze_repaired,partition_column,mode).save(silverPath_movies)
     batch_writer(genres_bronze_repaired,partition_column,mode).save(silverPath_genres)
     update_bronze_table_status(spark,bronzePath_movies,movies_bronze_repaired,"loaded")
@@ -376,8 +326,13 @@ for i in l:
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select count(*) from  languages_classic_silver
+# MAGIC select count(*) from  movie_classic_bronze where status = 'quarantined'
 
 # COMMAND ----------
 
-|
+# MAGIC %sql
+# MAGIC select count(*) from  movie_classic_bronze
+
+# COMMAND ----------
+
+
