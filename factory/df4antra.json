@@ -1,0 +1,9 @@
+{
+	"name": "df4antra",
+	"location": "centralus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "e2b6e13d-042e-451d-8c08-337c93f5b2f0",
+		"tenantId": "c2f4cad2-ed0b-47ff-a7f6-b75134164038"
+	}
+}

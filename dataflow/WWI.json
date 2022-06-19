@@ -1,0 +1,463 @@
+{
+	"name": "WWI",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ouptutOrders",
+						"type": "DatasetReference"
+					},
+					"name": "OrdersODS"
+				},
+				{
+					"dataset": {
+						"referenceName": "outputOrderlines",
+						"type": "DatasetReference"
+					},
+					"name": "OrderlinesODS"
+				},
+				{
+					"dataset": {
+						"referenceName": "StockItems",
+						"type": "DatasetReference"
+					},
+					"name": "StockItems"
+				},
+				{
+					"dataset": {
+						"referenceName": "outputPeople",
+						"type": "DatasetReference"
+					},
+					"name": "People"
+				},
+				{
+					"dataset": {
+						"referenceName": "OutputPackageTypes",
+						"type": "DatasetReference"
+					},
+					"name": "PackageTypes"
+				},
+				{
+					"dataset": {
+						"referenceName": "outputinvoices",
+						"type": "DatasetReference"
+					},
+					"name": "Invoices"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SalesPerStockItem",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				},
+				{
+					"dataset": {
+						"referenceName": "CustomerInfo",
+						"type": "DatasetReference"
+					},
+					"name": "sink3"
+				},
+				{
+					"dataset": {
+						"referenceName": "StockItemPackageType",
+						"type": "DatasetReference"
+					},
+					"name": "sink4"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CountOrdersPerCustomer"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "sort1"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "join1"
+				},
+				{
+					"name": "SalesPerStockItem"
+				},
+				{
+					"name": "rank1"
+				},
+				{
+					"name": "join2"
+				},
+				{
+					"name": "PeopleName"
+				},
+				{
+					"name": "select3"
+				},
+				{
+					"name": "join3"
+				},
+				{
+					"name": "select4"
+				},
+				{
+					"name": "select5"
+				},
+				{
+					"name": "join4"
+				},
+				{
+					"name": "select6"
+				},
+				{
+					"name": "select7"
+				},
+				{
+					"name": "select8"
+				},
+				{
+					"name": "join5"
+				},
+				{
+					"name": "join6"
+				},
+				{
+					"name": "select9"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          OrderID as integer,",
+				"          CustomerID as integer,",
+				"          SalespersonPersonID as integer,",
+				"          PickedByPersonID as integer,",
+				"          ContactPersonID as integer,",
+				"          BackorderOrderID as integer,",
+				"          OrderDate as date,",
+				"          ExpectedDeliveryDate as date,",
+				"          CustomerPurchaseOrderNumber as string,",
+				"          IsUndersupplyBackordered as boolean,",
+				"          Comments as string,",
+				"          DeliveryInstructions as string,",
+				"          InternalComments as string,",
+				"          PickingCompletedWhen as timestamp,",
+				"          LastEditedBy as integer,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     waterMarkColumn: 'logDT',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> OrdersODS",
+				"source(output(",
+				"          OrderLineID as integer,",
+				"          OrderID as integer,",
+				"          StockItemID as integer,",
+				"          Description as string,",
+				"          PackageTypeID as integer,",
+				"          Quantity as integer,",
+				"          UnitPrice as decimal(18,2),",
+				"          TaxRate as decimal(18,3),",
+				"          PickedQuantity as integer,",
+				"          PickingCompletedWhen as timestamp,",
+				"          LastEditedBy as integer,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     waterMarkColumn: 'logDT',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> OrderlinesODS",
+				"source(output(",
+				"          StockItemID as integer,",
+				"          StockItemName as string,",
+				"          SupplierID as integer,",
+				"          ColorID as integer,",
+				"          UnitPackageID as integer,",
+				"          OuterPackageID as integer,",
+				"          Brand as string,",
+				"          Size as string,",
+				"          LeadTimeDays as integer,",
+				"          QuantityPerOuter as integer,",
+				"          IsChillerStock as boolean,",
+				"          Barcode as string,",
+				"          TaxRate as decimal(18,3),",
+				"          UnitPrice as decimal(18,2),",
+				"          RecommendedRetailPrice as decimal(18,2),",
+				"          TypicalWeightPerUnit as decimal(18,3),",
+				"          MarketingComments as string,",
+				"          InternalComments as string,",
+				"          Photo as binary,",
+				"          CustomFields as string,",
+				"          Tags as string,",
+				"          SearchDetails as string,",
+				"          LastEditedBy as integer,",
+				"          ValidFrom as timestamp,",
+				"          ValidTo as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     waterMarkColumn: 'logDT',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StockItems",
+				"source(output(",
+				"          PersonID as integer,",
+				"          FullName as string,",
+				"          PreferredName as string,",
+				"          SearchName as string,",
+				"          IsPermittedToLogon as boolean,",
+				"          LogonName as string,",
+				"          IsExternalLogonProvider as boolean,",
+				"          HashedPassword as binary,",
+				"          IsSystemUser as boolean,",
+				"          IsEmployee as boolean,",
+				"          IsSalesperson as boolean,",
+				"          UserPreferences as string,",
+				"          PhoneNumber as string,",
+				"          FaxNumber as string,",
+				"          EmailAddress as string,",
+				"          Photo as binary,",
+				"          CustomFields as string,",
+				"          OtherLanguages as string,",
+				"          LastEditedBy as integer,",
+				"          ValidFrom as timestamp,",
+				"          ValidTo as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> People",
+				"source(output(",
+				"          PackageTypeID as integer,",
+				"          PackageTypeName as string,",
+				"          LastEditedBy as integer,",
+				"          ValidFrom as timestamp,",
+				"          ValidTo as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> PackageTypes",
+				"source(output(",
+				"          InvoiceID as integer,",
+				"          CustomerID as integer,",
+				"          BillToCustomerID as integer,",
+				"          OrderID as integer,",
+				"          DeliveryMethodID as integer,",
+				"          ContactPersonID as integer,",
+				"          AccountsPersonID as integer,",
+				"          SalespersonPersonID as integer,",
+				"          PackedByPersonID as integer,",
+				"          InvoiceDate as date,",
+				"          CustomerPurchaseOrderNumber as string,",
+				"          IsCreditNote as boolean,",
+				"          CreditNoteReason as string,",
+				"          Comments as string,",
+				"          DeliveryInstructions as string,",
+				"          InternalComments as string,",
+				"          TotalDryItems as integer,",
+				"          TotalChillerItems as integer,",
+				"          DeliveryRun as string,",
+				"          RunPosition as string,",
+				"          ReturnedDeliveryData as string,",
+				"          ConfirmedDeliveryTime as timestamp,",
+				"          ConfirmedReceivedBy as string,",
+				"          LastEditedBy as integer,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Invoices",
+				"select1 aggregate(groupBy(CustomerID),",
+				"     NumOfOrderPerCustomer = count(OrderID)) ~> CountOrdersPerCustomer",
+				"OrdersODS select(mapColumn(",
+				"          OrderID,",
+				"          CustomerID,",
+				"          SalespersonPersonID,",
+				"          PickedByPersonID,",
+				"          ContactPersonID,",
+				"          BackorderOrderID,",
+				"          OrderDate,",
+				"          ExpectedDeliveryDate,",
+				"          CustomerPurchaseOrderNumber,",
+				"          IsUndersupplyBackordered,",
+				"          Comments,",
+				"          DeliveryInstructions,",
+				"          InternalComments,",
+				"          PickingCompletedWhen,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"CountOrdersPerCustomer sort(desc(NumOfOrderPerCustomer, true)) ~> sort1",
+				"OrderlinesODS select(mapColumn(",
+				"          OrderLineID,",
+				"          OrderID,",
+				"          StockItemID,",
+				"          Description,",
+				"          PackageTypeID,",
+				"          Quantity,",
+				"          UnitPrice,",
+				"          TaxRate,",
+				"          PickedQuantity,",
+				"          PickingCompletedWhen,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"select2, select4 join(select2@StockItemID == select4@StockItemID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"select5 aggregate(groupBy(StockItemID),",
+				"     SalesPerStockItem = sum(Quantity*UnitPrice)) ~> SalesPerStockItem",
+				"SalesPerStockItem rank(desc(SalesPerStockItem, true),",
+				"     caseInsensitive: true,",
+				"     output(SalesRank as long),",
+				"     dense: true) ~> rank1",
+				"sort1, PeopleName join(CustomerID == PersonID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join2",
+				"People select(mapColumn(",
+				"          PersonID,",
+				"          FullName,",
+				"          PhoneNumber,",
+				"          EmailAddress",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> PeopleName",
+				"join2 select(mapColumn(",
+				"          CustomerID,",
+				"          NumOfOrderPerCustomer,",
+				"          FullName,",
+				"          PhoneNumber,",
+				"          EmailAddress",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
+				"StockItems, PackageTypes join(UnitPackageID == PackageTypeID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join3",
+				"join3 select(mapColumn(",
+				"          StockItemID,",
+				"          StockItemName,",
+				"          PackageTypeName",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select4",
+				"join1 select(mapColumn(",
+				"          OrderID,",
+				"          StockItemID = select2@StockItemID,",
+				"          PackageTypeID,",
+				"          Quantity,",
+				"          UnitPrice,",
+				"          StockItemID = select4@StockItemID,",
+				"          StockItemName,",
+				"          PackageTypeName",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select5",
+				"select6, select4 join(select6@StockItemID == select4@StockItemID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join4",
+				"rank1 select(mapColumn(",
+				"          StockItemID,",
+				"          SalesPerStockItem,",
+				"          SalesRank",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select6",
+				"join4 select(mapColumn(",
+				"          StockItemID = select4@StockItemID,",
+				"          StockItemName,",
+				"          SalesPerStockItem,",
+				"          SalesRank,",
+				"          PackageTypeName",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select7",
+				"Invoices select(mapColumn(",
+				"          InvoiceID,",
+				"          CustomerID,",
+				"          OrderID,",
+				"          InvoiceDate,",
+				"          DeliveryInstructions",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select8",
+				"select8, PeopleName join(CustomerID == PersonID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join5",
+				"join5, select3 join(select8@CustomerID == select3@CustomerID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join6",
+				"join6 select(mapColumn(",
+				"          InvoiceID,",
+				"          OrderID,",
+				"          InvoiceDate,",
+				"          PersonID,",
+				"          FullName = PeopleName@FullName,",
+				"          PhoneNumber = PeopleName@PhoneNumber,",
+				"          EmailAddress = PeopleName@EmailAddress,",
+				"          DeliveryInstructions",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select9",
+				"select7 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2",
+				"select3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink3",
+				"select4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink4"
+			]
+		}
+	}
+}

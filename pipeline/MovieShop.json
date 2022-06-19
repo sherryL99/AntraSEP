@@ -1,0 +1,76 @@
+{
+	"name": "MovieShop",
+	"properties": {
+		"activities": [
+			{
+				"name": "RawToBronze",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "RawToBronze",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "BronzeToSilver",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "RawToBronze",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "BronzeToSilver",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"MovieSilver": {
+								"DicName": "adf_parquet_movie"
+							},
+							"sink3": {
+								"DirectoryName": "adf_parquet_genres"
+							},
+							"sink5": {
+								"DirectoryName": "adf_parquet_language"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-06-18T02:13:54Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,29 @@
+{
+	"name": "MovieSilver",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ReadBronzeMovie",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"DicName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": {
+					"value": "@dataset().DicName",
+					"type": "Expression"
+				},
+				"container": "newcontainer"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

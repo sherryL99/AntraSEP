@@ -1,0 +1,31 @@
+{
+	"name": "wwi_oltp",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "InputSource",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"sourceSchema": {
+				"type": "string"
+			},
+			"sourceTable": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().sourceSchema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().sourceTable",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

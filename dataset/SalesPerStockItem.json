@@ -1,0 +1,17 @@
+{
+	"name": "SalesPerStockItem",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OutputSource",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "SalesPerStockItem"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

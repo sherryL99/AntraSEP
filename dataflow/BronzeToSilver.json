@@ -1,0 +1,311 @@
+{
+	"name": "BronzeToSilver",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "bronzeMovie",
+						"type": "DatasetReference"
+					},
+					"name": "IngestBronze"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "MovieSilver",
+						"type": "DatasetReference"
+					},
+					"name": "MovieSilver"
+				},
+				{
+					"dataset": {
+						"referenceName": "BronzeToSilver",
+						"type": "DatasetReference"
+					},
+					"name": "sink3"
+				},
+				{
+					"dataset": {
+						"referenceName": "BronzeToSilver",
+						"type": "DatasetReference"
+					},
+					"name": "sink5"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filterStatusNew"
+				},
+				{
+					"name": "selectMovie"
+				},
+				{
+					"name": "selectGenres"
+				},
+				{
+					"name": "selectLanguage"
+				},
+				{
+					"name": "flattenGenres"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "LitStatusLoaded"
+				},
+				{
+					"name": "LitStatusQuarantined"
+				},
+				{
+					"name": "selectData"
+				},
+				{
+					"name": "DeduplicateGenres"
+				},
+				{
+					"name": "split2"
+				},
+				{
+					"name": "LitStatusLoadedGenres"
+				},
+				{
+					"name": "TransformGenres"
+				},
+				{
+					"name": "LitStatusQuarantinedGenres"
+				},
+				{
+					"name": "ChangeValue"
+				},
+				{
+					"name": "selectJoinedData"
+				},
+				{
+					"name": "LitStatusQuarantineLoadedGenres"
+				},
+				{
+					"name": "split3"
+				},
+				{
+					"name": "LitStatusLoadedLanguage"
+				},
+				{
+					"name": "ChangeMovieValue"
+				},
+				{
+					"name": "LitMovieQuarantineLoaded"
+				},
+				{
+					"name": "ChangeValueLanguage"
+				},
+				{
+					"name": "union1"
+				},
+				{
+					"name": "union2"
+				},
+				{
+					"name": "union3"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "select2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          movie as (Id as integer, Title as string, Overview as string, Tagline as string, Budget as double, Revenue as double, ImdbUrl as string, TmdbUrl as string, PosterUrl as string, BackdropUrl as string, OriginalLanguage as string, ReleaseDate as string, RunTime as integer, Price as double, CreatedDate as string, UpdatedDate as string, UpdatedBy as string, CreatedBy as string, genres as (id as integer, name as string)[]),",
+				"          datasource as string,",
+				"          status as string,",
+				"          ingestdate as date,",
+				"          ingesttime as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> IngestBronze",
+				"IngestBronze filter(status=='new') ~> filterStatusNew",
+				"selectData select(mapColumn(",
+				"          Id,",
+				"          Title,",
+				"          Overview,",
+				"          Tagline,",
+				"          Budget,",
+				"          Revenue,",
+				"          ImdbUrl,",
+				"          TmdbUrl,",
+				"          PosterUrl,",
+				"          BackdropUrl,",
+				"          OriginalLanguage,",
+				"          ReleaseDate,",
+				"          RunTime,",
+				"          Price,",
+				"          CreatedDate,",
+				"          UpdatedDate,",
+				"          UpdatedBy,",
+				"          CreatedBy,",
+				"          genres,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectMovie",
+				"selectData select(mapColumn(",
+				"          genres,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectGenres",
+				"selectData select(mapColumn(",
+				"          OriginalLanguage,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectLanguage",
+				"selectGenres foldDown(unroll(genres),",
+				"     mapColumn(",
+				"          genres_id = genres.id,",
+				"          genres_name = genres.name,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime,",
+				"          genres",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenGenres",
+				"selectMovie split(and(Budget>1000000, RunTime>0),",
+				"     disjoint: false) ~> split1@(MovieSilverClean, MovieSilverQuarantine)",
+				"split1@MovieSilverClean derive(status = 'loaded') ~> LitStatusLoaded",
+				"split1@MovieSilverQuarantine derive(status = 'quarantined') ~> LitStatusQuarantined",
+				"filterStatusNew select(mapColumn(",
+				"          movie,",
+				"          Id = movie.Id,",
+				"          Title = movie.Title,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime,",
+				"          Overview = movie.Overview,",
+				"          Tagline = movie.Tagline,",
+				"          Budget = movie.Budget,",
+				"          Revenue = movie.Revenue,",
+				"          ImdbUrl = movie.ImdbUrl,",
+				"          TmdbUrl = movie.TmdbUrl,",
+				"          PosterUrl = movie.PosterUrl,",
+				"          BackdropUrl = movie.BackdropUrl,",
+				"          OriginalLanguage = movie.OriginalLanguage,",
+				"          ReleaseDate = movie.ReleaseDate,",
+				"          RunTime = movie.RunTime,",
+				"          Price = movie.Price,",
+				"          CreatedDate = movie.CreatedDate,",
+				"          UpdatedDate = movie.UpdatedDate,",
+				"          UpdatedBy = movie.UpdatedBy,",
+				"          CreatedBy = movie.CreatedBy,",
+				"          genres = movie.genres",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectData",
+				"flattenGenres aggregate(groupBy(genres_id),",
+				"     genres_name = first(genres_name)) ~> DeduplicateGenres",
+				"flattenGenres split(not(isNull(genres_name)),",
+				"     disjoint: false) ~> split2@(GenresSilverClean, GenresSilverQurantine)",
+				"TransformGenres derive(status = 'loaded') ~> LitStatusLoadedGenres",
+				"split2@GenresSilverClean select(mapColumn(",
+				"          genres,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> TransformGenres",
+				"split2@GenresSilverQurantine derive(status = 'quarantined') ~> LitStatusQuarantinedGenres",
+				"LitStatusQuarantinedGenres, DeduplicateGenres join(split2@GenresSilverQurantine@genres_id == DeduplicateGenres@genres_id,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> ChangeValue",
+				"ChangeValue select(mapColumn(",
+				"          genres,",
+				"          genres_id = DeduplicateGenres@genres_id,",
+				"          genres_name = DeduplicateGenres@genres_name,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectJoinedData",
+				"selectJoinedData derive(status = 'loaded') ~> LitStatusQuarantineLoadedGenres",
+				"selectLanguage split(not(isNull(OriginalLanguage)),",
+				"     disjoint: false) ~> split3@(LanguageSilverClean, LanguageSilverQuarantine)",
+				"split3@LanguageSilverClean derive(status = 'loaded') ~> LitStatusLoadedLanguage",
+				"LitStatusQuarantined derive(RunTime = abs(RunTime),",
+				"          Budget = 1000000) ~> ChangeMovieValue",
+				"ChangeMovieValue derive(status = 'loaded') ~> LitMovieQuarantineLoaded",
+				"split3@LanguageSilverQuarantine derive(OriginalLanguage = 'en') ~> ChangeValueLanguage",
+				"LitStatusLoadedLanguage, ChangeValueLanguage union(byName: true)~> union1",
+				"select1, LitStatusQuarantineLoadedGenres union(byName: true)~> union2",
+				"LitStatusLoaded, LitMovieQuarantineLoaded union(byName: true)~> union3",
+				"LitStatusLoadedGenres select(mapColumn(",
+				"          genres,",
+				"          id = genres.id,",
+				"          name = genres.name,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"union2 select(mapColumn(",
+				"          genres,",
+				"          id,",
+				"          name,",
+				"          datasource,",
+				"          status,",
+				"          ingestdate,",
+				"          ingesttime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"union3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> MovieSilver",
+				"select2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink3",
+				"union1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink5"
+			]
+		}
+	}
+}

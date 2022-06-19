@@ -1,0 +1,31 @@
+{
+	"name": "wwi_ods",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OutputSource",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"sinkSchema": {
+				"type": "string"
+			},
+			"sinkTable": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().sinkSchema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().sinkTable",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,36 @@
+{
+	"name": "tablelist_json_ablob",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "tablelist_json",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "WWIjson.json",
+				"container": "newcontainer"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"sourceSchema": {
+					"type": "string"
+				},
+				"souceTable": {
+					"type": "string"
+				},
+				"sinkSchema": {
+					"type": "string"
+				},
+				"sinkTable": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
