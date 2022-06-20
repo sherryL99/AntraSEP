@@ -88,7 +88,7 @@
 										"type": "Expression"
 									},
 									"storedProcedureTableTypeParameterName": {
-										"value": "@{item().TABLE_NAME}",
+										"value": "@{item().TABLE_NAME_SINK}",
 										"type": "Expression"
 									},
 									"disableMetricsCollection": false
@@ -115,7 +115,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"SinkTableName": {
-											"value": "@{item().TABLE_NAME}",
+											"value": "@{item().TABLE_NAME_SINK}",
 											"type": "Expression"
 										}
 									}
