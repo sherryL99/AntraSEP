@@ -181,7 +181,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "select MAX(@{item().WaterMark_Column}) as NewWatermarkvalue from TableName=@{item().TABLE_NAME}",
+										"value": "select MAX(@{item().WaterMark_Column}) as NewWatermarkvalue from TableName='@{item().TABLE_NAME}'",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
