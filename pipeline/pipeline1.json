@@ -86,8 +86,10 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
+						"sqlWriterStoredProcedureName": "[dbo].[usp_upsert_order_table]",
+						"sqlWriterTableType": "DataTypeforOrdersTable",
+						"storedProcedureTableTypeParameterName": "Orders",
+						"disableMetricsCollection": false
 					},
 					"enableStaging": false,
 					"translator": {
