@@ -80,7 +80,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "select * from Sales.Orders where  LastEditedWhen> @{activity('LookupOldWatermark').output.value[0].WatermarkValue} and @{item().WaterMark_Column} <= @{activity('LookupNewWatermark').output.value[0].NewWatermarkvalue}",
+						"sqlReaderQuery": "select * from Sales.Orders where  LastEditedWhen> @{activity('LookupOldWatermark').output.firstRow.WatermarkValue} and @{item().WaterMark_Column} <= @{activity('LookupNewWatermark').output.firstRow.NewWatermarkvalue}",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
