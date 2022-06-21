@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "df4antra"
+		},
+		"AzureSqlDatabase1_connectionString": {
+			"value": ""
+		},
+		"BronzeToSilver_accountKey": {
+			"value": ""
+		},
+		"InputSource_connectionString": {
+			"value": ""
+		},
+		"MovieFileJson_connectionString": {
+			"value": ""
+		},
+		"OutputSource_connectionString": {
+			"value": ""
+		},
+		"RawToSilverParquet_connectionString": {
+			"value": ""
+		},
+		"ReadBronzeMovie_connectionString": {
+			"value": ""
+		},
+		"SinkDataset_connectionString": {
+			"value": ""
+		},
+		"SourceDataset_connectionString": {
+			"value": ""
+		},
+		"parquetgen2_accountKey": {
+			"value": ""
+		},
+		"tablelist_json_connectionString": {
+			"value": ""
+		},
+		"BronzeToSilver_properties_typeProperties_url": {
+			"value": "https://adbnew.dfs.core.windows.net/"
+		},
+		"parquetgen2_properties_typeProperties_url": {
+			"value": "https://adbnew.dfs.core.windows.net/"
+		}
+	}
+}

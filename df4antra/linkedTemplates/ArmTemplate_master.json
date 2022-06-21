@@ -1,0 +1,173 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "df4antra"
+		},
+		"AzureSqlDatabase1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+		},
+		"BronzeToSilver_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'BronzeToSilver'"
+		},
+		"InputSource_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'InputSource'"
+		},
+		"MovieFileJson_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'MovieFileJson'"
+		},
+		"OutputSource_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'OutputSource'"
+		},
+		"RawToSilverParquet_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'RawToSilverParquet'"
+		},
+		"ReadBronzeMovie_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ReadBronzeMovie'"
+		},
+		"SinkDataset_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SinkDataset'"
+		},
+		"SourceDataset_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SourceDataset'"
+		},
+		"parquetgen2_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'parquetgen2'"
+		},
+		"tablelist_json_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'tablelist_json'"
+		},
+		"BronzeToSilver_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adbnew.dfs.core.windows.net/"
+		},
+		"parquetgen2_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adbnew.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "df4antra_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureSqlDatabase1_connectionString": {
+						"value": "[parameters('AzureSqlDatabase1_connectionString')]"
+					},
+					"BronzeToSilver_accountKey": {
+						"value": "[parameters('BronzeToSilver_accountKey')]"
+					},
+					"InputSource_connectionString": {
+						"value": "[parameters('InputSource_connectionString')]"
+					},
+					"MovieFileJson_connectionString": {
+						"value": "[parameters('MovieFileJson_connectionString')]"
+					},
+					"OutputSource_connectionString": {
+						"value": "[parameters('OutputSource_connectionString')]"
+					},
+					"RawToSilverParquet_connectionString": {
+						"value": "[parameters('RawToSilverParquet_connectionString')]"
+					},
+					"ReadBronzeMovie_connectionString": {
+						"value": "[parameters('ReadBronzeMovie_connectionString')]"
+					},
+					"SinkDataset_connectionString": {
+						"value": "[parameters('SinkDataset_connectionString')]"
+					},
+					"SourceDataset_connectionString": {
+						"value": "[parameters('SourceDataset_connectionString')]"
+					},
+					"parquetgen2_accountKey": {
+						"value": "[parameters('parquetgen2_accountKey')]"
+					},
+					"tablelist_json_connectionString": {
+						"value": "[parameters('tablelist_json_connectionString')]"
+					},
+					"BronzeToSilver_properties_typeProperties_url": {
+						"value": "[parameters('BronzeToSilver_properties_typeProperties_url')]"
+					},
+					"parquetgen2_properties_typeProperties_url": {
+						"value": "[parameters('parquetgen2_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "df4antra_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'df4antra_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "df4antra_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'df4antra_ArmTemplate_1')]"
+			]
+		}
+	]
+}
