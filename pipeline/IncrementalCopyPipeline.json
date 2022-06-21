@@ -153,7 +153,7 @@
 									},
 									"TableName": {
 										"value": {
-											"value": "@{activity('LookupOldWaterMarkActivity').output.value[0].NewWatermarkvalue}",
+											"value": "@{activity('LookupOldWaterMarkActivity').output.value[0].TableName}",
 											"type": "Expression"
 										},
 										"type": "String"
