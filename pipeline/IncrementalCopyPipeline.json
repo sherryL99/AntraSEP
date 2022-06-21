@@ -71,7 +71,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "select * from @{item().TABLE_NAME_SOURCE} where @{item().WaterMark_Column} > @{activity('LookupOldWaterMarkActivity').output.value[0].WatermarkValue} and @{item().WaterMark_Column} <= @{activity('LookupNewWaterMarkActivity').output.value[0].NewWatermarkvalue}",
+										"value": "select * from @{item().TABLE_NAME_SOURCE} where @{item().WaterMark_Column} > '@{activity('LookupOldWaterMarkActivity').output.firstRow.WatermarkValue}' and @{item().WaterMark_Column} <= '@{activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue}''",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
