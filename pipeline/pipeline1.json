@@ -136,14 +136,14 @@
 					"storedProcedureParameters": {
 						"LastEditedWhen": {
 							"value": {
-								"value": "@{activity('LookupNewWatermark').output.value[0].NewWatermarkvalue}",
+								"value": "@{activity('LookupNewWatermark').output.firstRow.NewWatermarkvalue}",
 								"type": "Expression"
 							},
 							"type": "DateTime"
 						},
 						"TableName": {
 							"value": {
-								"value": "@{activity('LookupOldWatermark').output.value[0].TableName}",
+								"value": "@{activity('LookupOldWatermark').output.firstRow.TableName}",
 								"type": "Expression"
 							},
 							"type": "String"
